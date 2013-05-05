@@ -1,0 +1,80 @@
+package analyseur;
+
+import java_cup.runtime.*;
+import java.util.*;
+
+
+/* Actions du code */
+action code {: 
+	private static Boolean isC = false;
+	private static Boolean isT = false;
+	private static Boolean isS = false;
+	private static Boolean isL = false;
+ :} ;
+parser code {:
+	public void report_error(String message, Object info) {
+		String m = "Erreur de syntaxe";
+		if (info instanceof Symbol) {
+			Symbol s = ((Symbol) info);
+			if (s.left >= 0) /* Numero de ligne */
+				m = m + " ligne : " + (s.left+1);
+		}
+		System.out.println(m);
+	} 
+:} ;
+ 
+
+/* Symboles terminaux */
+terminal String  LI, TITRE, SOUS, SAUT; 
+terminal String CHAINE;
+
+/* Symboles non terminaux */
+non terminal seq_expressions, expression;
+non terminal expr;
+ 
+/* Precedences */
+precedence left CHAINE, LI, TITRE, SOUS;
+
+/* Grammaire */
+seq_expressions::= expression seq_expressions | expression;
+
+expression::= expr:e
+{: 	
+	if(isC)
+		System.out.println("<p>"+e+"</p>");
+	if(isL)
+		System.out.println("  <li>"+e+"</li>");
+	if(isT)
+		System.out.println("<h1>"+e+"</h1>");
+	if(isS)
+		System.out.println("<h2>"+e+"</h2>");
+	isC = false; isL = false; isT = false; isS = false; 
+:} SAUT | error SAUT ;
+ 
+expr::= CHAINE: c
+{:
+	//System.out.println("<p>" + c + "</p>");
+	isC = true;
+	RESULT = c;
+:} |
+
+LI : c
+{:
+	//System.out.println("<li>" + c + "</li>");
+	isL = true;
+	RESULT = c;
+:} |
+
+TITRE : c
+{:
+	//System.out.println("<h1>" + c + "</h1>");
+	isT = true;
+	RESULT = c;
+:} |
+
+SOUS : c
+{:
+	//System.out.println("<h2>" + c + "</h2>");
+	isS = true;
+	RESULT = c;
+:};
